@@ -24,6 +24,10 @@ docker compose up -d db
 
 This starts Postgres with pgvector and applies `backend/db/migrations/*.sql` on first boot.
 
+## Documentation
+
+Start at [docs/README.md](docs/README.md) for the scope, your role, guardrails and workflow.
+
 ## Workflow
 
 PRs only into protected `main`, 1 approval, squash merge. See `.github/CODEOWNERS`.
