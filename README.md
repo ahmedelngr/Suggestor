@@ -16,13 +16,9 @@ Suggestor is a standalone product. EventApp is a future integration client only.
 | `frontend/` | Frontend | Swipe UI |
 | `docs/` | Everyone | Design notes, open decisions |
 
-## Quick start (database)
+## Database
 
-```bash
-docker compose up -d db
-```
-
-This starts Postgres with pgvector and applies `backend/db/migrations/*.sql` on first boot.
+Supabase (Postgres + pgvector + Auth). Run `backend/db/migrations/*.sql` in order in the Supabase SQL editor. Copy `.env.example` to `.env` and fill in your own values. Never commit `.env`.
 
 ## Documentation
 
