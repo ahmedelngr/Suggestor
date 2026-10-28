@@ -1,7 +1,8 @@
-import psycopg
-from fastapi import FastAPI, Depends
+import psycopg, os, httpx
+from fastapi import FastAPI, Depends, HTTPException
 
 from backend.app.db import get_conn
+from backend.app.auth import current_user, supabase_headers
 
 app = FastAPI(title="Suggestor")
 
@@ -10,8 +11,21 @@ app = FastAPI(title="Suggestor")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
-
 @app.get("/health/db")
 def health_db(conn: psycopg.Connection = Depends(get_conn)) -> dict[str, str]:
     conn.execute("SELECT 1")
     return {"status": "ok"}
+
+@app.get("/me")
+def me(user: dict[str, str] = Depends(current_user)) -> dict:
+    url = f"{os.environ['SUPABASE_URL']}/rest/v1/users"
+    resp = httpx.get(
+        url,
+        params={"select": "id,first_name,last_name,email,onboarded_at"},
+        headers=supabase_headers(user["token"]),
+        timeout=10,
+    )
+    rows = resp.json()
+    if resp.status_code != 200 or not rows:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return rows[0]
