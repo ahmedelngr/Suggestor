@@ -14,6 +14,8 @@ class FakeResponse:
         self._data = data
 
     def json(self):
+        if self._data is None:
+            raise ValueError("not JSON")
         return self._data
 
 
@@ -65,6 +67,6 @@ def test_me_supabase_401_is_401(monkeypatch):
 
 def test_me_supabase_error_is_502(monkeypatch):
     signed_in_as_test_user()
-    fake_supabase(monkeypatch, 500, {})
+    fake_supabase(monkeypatch, 500, None)
     assert client.get("/me").status_code == 502
 

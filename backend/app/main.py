@@ -30,7 +30,7 @@ def me(user: dict[str, str] = Depends(current_user)) -> dict:
         headers=supabase_headers(user["token"]),
         timeout=10,
     )
-    rows = resp.json()
+
     if resp.status_code == 401:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if resp.status_code != 200:
