@@ -55,3 +55,16 @@ def test_me_without_profile_row_is_404(monkeypatch):
     signed_in_as_test_user()
     fake_supabase(monkeypatch, 200, [])
     assert client.get("/me").status_code == 404
+
+
+def test_me_supabase_401_is_401(monkeypatch):
+    signed_in_as_test_user()
+    fake_supabase(monkeypatch, 401, {})
+    assert client.get("/me").status_code == 401
+
+
+def test_me_supabase_error_is_502(monkeypatch):
+    signed_in_as_test_user()
+    fake_supabase(monkeypatch, 500, {})
+    assert client.get("/me").status_code == 502
+
