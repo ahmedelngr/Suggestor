@@ -2,10 +2,11 @@ import os
 
 import httpx
 import psycopg
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 
 from backend.app.auth import current_user, supabase_headers
 from backend.app.db import get_conn
+from backend.app.feed import get_feed, get_profile
 
 app = FastAPI(title="Suggestor")
 
@@ -39,3 +40,17 @@ def me(user: dict[str, str] = Depends(current_user)) -> dict:
     if not rows:
         raise HTTPException(status_code=404, detail="Profile not found")
     return rows[0]
+
+
+@app.get("/feed")
+def feed(
+    limit: int = Query(20, ge=1, le=50),
+    user: dict[str, str] = Depends(current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[dict]:
+    profile = get_profile(conn, user["auth_id"])
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    if not profile["has_taste"]:
+        raise HTTPException(status_code=409, detail="Finish onboarding first")
+    return get_feed(conn, user["auth_id"], limit)
