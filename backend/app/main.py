@@ -3,12 +3,19 @@ import os
 import httpx
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Query
+from pydantic import BaseModel
 
 from backend.app.auth import current_user, supabase_headers
 from backend.app.db import get_conn
 from backend.app.feed import get_feed, get_profile
+from backend.app.swipes import item_exists, record_swipe, update_taste
 
 app = FastAPI(title="Suggestor")
+
+
+class SwipeIn(BaseModel):
+    item_id: int
+    liked: bool
 
 
 @app.get("/health")
@@ -54,3 +61,19 @@ def feed(
     if not profile["has_taste"]:
         raise HTTPException(status_code=409, detail="Finish onboarding first")
     return get_feed(conn, user["auth_id"], limit)
+
+
+@app.post("/swipes", status_code=201)
+def swipe(
+    body: SwipeIn,
+    user: dict[str, str] = Depends(current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> dict:
+    profile = get_profile(conn, user["auth_id"])
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    if not item_exists(conn, body.item_id):
+        raise HTTPException(status_code=404, detail="Item not found")
+    swipe_id = record_swipe(conn, profile["id"], body.item_id, body.liked)
+    update_taste(conn, profile["id"])
+    return {"id": swipe_id, "item_id": body.item_id, "liked": body.liked}
