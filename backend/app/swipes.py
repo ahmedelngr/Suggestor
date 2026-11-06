@@ -43,4 +43,3 @@ def update_taste(conn, user_id):
         "UPDATE users SET taste_vector = %s::vector WHERE id = %s",
         (json.dumps(taste), user_id),
     )
-    
