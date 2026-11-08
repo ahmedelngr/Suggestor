@@ -14,6 +14,3 @@ jobs:
       - run: pip install -r backend/requirements.txt
       - run: python -c "import backend.app.main"
       - run: python -m pytest backend
-      - run: pip install -r backend/requirements.txt
-      - run: python -c "import backend.app.main"
-      - run: python -m pytest backend
