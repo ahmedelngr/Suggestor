@@ -5,7 +5,9 @@ export const colors = {
   text: '#1B1B1F',
   textMuted: '#5E5E6A',
   chip: '#EEEEF2',
+  border: '#D4D4DC',
   like: '#1FA971',
   dislike: '#E5484D',
+  errorBackground: '#FDECEC',
   primary: '#3E63DD',
 };

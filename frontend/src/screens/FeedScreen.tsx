@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { submitFeedback } from '../api/feedback';
 import { getItems } from '../api/items';
+import { useSession } from '../auth/SessionProvider';
+import { PrimaryButton } from '../components/PrimaryButton';
 import { SwipeCard, type SwipeCardHandle } from '../components/SwipeCard';
 import { colors } from '../theme';
 import type { Feedback, FeedbackAction, SuggestorItem } from '../types';
@@ -11,6 +13,7 @@ import type { Feedback, FeedbackAction, SuggestorItem } from '../types';
 type Status = 'loading' | 'error' | 'ready';
 
 export function FeedScreen() {
+  const { signOut } = useSession();
   const [status, setStatus] = useState<Status>('loading');
   const [items, setItems] = useState<SuggestorItem[]>([]);
   const [index, setIndex] = useState(0);
@@ -60,7 +63,7 @@ export function FeedScreen() {
       <View style={styles.centered}>
         <Text style={styles.messageTitle}>Couldn't load places</Text>
         <Text style={styles.messageBody}>Check your connection and try again.</Text>
-        <PrimaryButton label="Try again" onPress={reload} />
+        <PrimaryButton label="Try again" onPress={reload} style={styles.messageAction} />
       </View>
     );
   } else if (!top) {
@@ -71,7 +74,7 @@ export function FeedScreen() {
         <Text style={styles.messageBody}>
           {likes} liked, {feedback.length - likes} passed this session.
         </Text>
-        <PrimaryButton label="Start over" onPress={reload} />
+        <PrimaryButton label="Start over" onPress={reload} style={styles.messageAction} />
       </View>
     );
   } else {
@@ -102,7 +105,18 @@ export function FeedScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.column}>
-        <Text style={styles.header}>Suggestor</Text>
+        <View style={styles.header}>
+          <Text style={styles.brand}>Suggestor</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
+            onPress={signOut}
+            hitSlop={8}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <Text style={styles.signOut}>Sign out</Text>
+          </Pressable>
+        </View>
         {content}
       </View>
     </SafeAreaView>
@@ -126,18 +140,6 @@ function RoundButton(props: { label: string; icon: string; color: string; onPres
   );
 }
 
-function PrimaryButton(props: { label: string; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={props.onPress}
-      style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
-    >
-      <Text style={styles.primaryButtonText}>{props.label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -151,11 +153,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 12,
+  },
+  brand: {
     fontSize: 24,
     fontWeight: '800',
-    textAlign: 'center',
     color: colors.primary,
+  },
+  signOut: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textMuted,
   },
   deck: {
     flex: 1,
@@ -201,16 +212,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
   },
-  primaryButton: {
+  messageAction: {
     marginTop: 8,
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 999,
-    backgroundColor: colors.primary,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
   },
 });
