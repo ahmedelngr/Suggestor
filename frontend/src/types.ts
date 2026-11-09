@@ -22,3 +22,22 @@ export interface Feedback {
   /** ISO 8601, e.g. "2026-11-09T19:04:12.345Z". */
   timestamp: string;
 }
+
+/** The signed-in user. */
+export interface Session {
+  /** Sent to the backend as `Authorization: Bearer <accessToken>`. */
+  accessToken: string;
+  email: string;
+}
+
+export interface SignInInput {
+  email: string;
+  password: string;
+}
+
+/** Same fields the Supabase sign-up trigger reads (backend migration 003). */
+export interface SignUpInput extends SignInInput {
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
