@@ -22,6 +22,7 @@ function RootStack() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn} redirectTo="/sign-in">
         <Stack.Screen name="index" />
+        <Stack.Screen name="profile" />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn} redirectTo="/">
         <Stack.Screen name="sign-in" />

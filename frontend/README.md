@@ -45,16 +45,19 @@ src/
   app/index.tsx                   /         -> FeedScreen
   app/sign-in.tsx                 /sign-in  -> SignInScreen
   app/sign-up.tsx                 /sign-up  -> SignUpScreen
-  screens/                        FeedScreen, SignInScreen, SignUpScreen
-  components/                     SwipeCard, PrimaryButton, TextField, AuthLayout
+  app/profile.tsx                 /profile  -> ProfileScreen
+  screens/                        FeedScreen, SignInScreen, SignUpScreen, ProfileScreen
+  components/                     SwipeCard, PrimaryButton, TextField, AuthLayout, Avatar
   auth/SessionProvider.tsx        who is signed in (useSession())
   auth/validation.ts              sign-in / sign-up form checks
   api/auth.ts                     signIn(), signUp(), signOut()  (stub: in-memory accounts)
   api/items.ts                    getItems()                     (stub: returns fake data)
-  api/feedback.ts                 submitFeedback()               (stub: console.log)
+  api/feedback.ts                 submitFeedback(), getLikes()   (stub: swipes kept in memory)
+  api/profile.ts                  getProfile()                   (stub: name from the fake account)
   data/fakeItems.ts               12 fictional Pomona-area restaurants
-  data/fakeAccounts.ts            the demo login
-  types.ts                        SuggestorItem, Feedback, Session, SignInInput, SignUpInput
+  data/fakeAccounts.ts            the demo login (Jordan Lee)
+  data/fakeSwipeHistory.ts        the demo account's past swipes, so the profile isn't empty
+  types.ts                        SuggestorItem, Feedback, LikedItem, Session, UserProfile, ...
   theme.ts                        colors
 ```
 
@@ -62,7 +65,7 @@ src/
 
 `SessionProvider` holds the current session (or `null`). `src/app/_layout.tsx` wraps the screens in two `Stack.Protected` groups:
 
-- **Signed in:** the feed (`/`). Signed-out users who open it are sent to `/sign-in`.
+- **Signed in:** the feed (`/`) and the profile (`/profile`). Signed-out users who open them are sent to `/sign-in`.
 - **Signed out:** `/sign-in` and `/sign-up`. Signed-in users who open them are sent to `/`.
 
 Signing in or out flips those guards, and the router moves to the right screen on its own. That's why the screens never navigate after a successful login.
@@ -79,6 +82,12 @@ The LIKE / NOPE stamp fades in as you drag and is fully visible at exactly the p
 
 Every swipe creates a `Feedback` record `{ itemId, action, timestamp }`, adds it to state in `FeedScreen` and passes it to `submitFeedback()`.
 
+## The profile
+
+**Profile** in the feed header opens `/profile`. It shows the user's name and email, their most common tags across liked places, and every place they've liked, newest first. Sign out is at the bottom.
+
+All of it is fake for now. The stubbed `submitFeedback()` keeps each account's swipes in memory, starting from `data/fakeSwipeHistory.ts`, so places you like on the feed show up on the profile right away. If you swipe the same place twice, only the latest swipe counts, the same rule as the backend's `latest_swipes` view. Everything resets when the app reloads. A new account starts with no likes.
+
 ## Wiring to the backend
 
 Only `src/api/` should talk to the server. Each file has comments describing the mapping:
@@ -90,6 +99,8 @@ Only `src/api/` should talk to the server. Each file has comments describing the
 | `signOut()` | `supabase.auth.signOut` | |
 | `getItems()` | `GET /feed?limit=20` | Rows have `image_url`, so map it to `imageUrl`. The backend's `distance` field is the taste-vector distance, **not miles**. Miles will need to be computed from `latitude`/`longitude`, or added by Backend. |
 | `submitFeedback()` | `POST /swipes` | Send `{ item_id: itemId, liked: action === 'like' }`. The server sets the timestamp itself. |
+| `getProfile()` | `GET /me` | Map `first_name`, `last_name`, `email`. Never show the phone number. |
+| `getLikes()` | none yet | Backend needs an endpoint, e.g. `GET /likes`: `latest_swipes` rows where `liked` is true, joined with `items`. |
 
 The backend endpoints need the session's access token as `Authorization: Bearer <token>`. Once auth is real, the session must be stored with `expo-secure-store` (team guardrail: never plain storage), and the app needs a short loading state on launch while it reads the saved session.
 

@@ -23,10 +23,24 @@ export interface Feedback {
   timestamp: string;
 }
 
+/** A place the user liked. */
+export interface LikedItem {
+  item: SuggestorItem;
+  /** ISO 8601. When they last swiped right on it. */
+  likedAt: string;
+}
+
 /** The signed-in user. */
 export interface Session {
   /** Sent to the backend as `Authorization: Bearer <accessToken>`. */
   accessToken: string;
+  email: string;
+}
+
+/** The signed-in user's own profile. Subset of what `GET /me` returns. */
+export interface UserProfile {
+  firstName: string;
+  lastName: string;
   email: string;
 }
 

@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +14,7 @@ import type { Feedback, FeedbackAction, SuggestorItem } from '../types';
 type Status = 'loading' | 'error' | 'ready';
 
 export function FeedScreen() {
-  const { signOut } = useSession();
+  const { session } = useSession();
   const [status, setStatus] = useState<Status>('loading');
   const [items, setItems] = useState<SuggestorItem[]>([]);
   const [index, setIndex] = useState(0);
@@ -45,7 +46,9 @@ export function FeedScreen() {
     const record: Feedback = { itemId, action, timestamp: new Date().toISOString() };
     setFeedback((prev) => [...prev, record]);
     setIndex((i) => i + 1);
-    submitFeedback(record).catch((err) => console.warn('[submitFeedback] failed', err));
+    if (session) {
+      submitFeedback(session, record).catch((err) => console.warn('[submitFeedback] failed', err));
+    }
   };
 
   const top = items[index];
@@ -107,15 +110,9 @@ export function FeedScreen() {
       <View style={styles.column}>
         <View style={styles.header}>
           <Text style={styles.brand}>Suggestor</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Sign out"
-            onPress={signOut}
-            hitSlop={8}
-            style={({ pressed }) => pressed && styles.pressed}
-          >
-            <Text style={styles.signOut}>Sign out</Text>
-          </Pressable>
+          <Link href="/profile" style={styles.profileLink}>
+            Profile
+          </Link>
         </View>
         {content}
       </View>
@@ -163,10 +160,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.primary,
   },
-  signOut: {
+  profileLink: {
     fontSize: 15,
-    fontWeight: '600',
-    color: colors.textMuted,
+    fontWeight: '700',
+    color: colors.primary,
   },
   deck: {
     flex: 1,

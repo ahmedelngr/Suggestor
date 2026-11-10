@@ -6,7 +6,9 @@ export class AuthError extends Error {}
 
 // STUB: accounts live in memory and reset when the app reloads. Never log
 // passwords or phone numbers, here or anywhere else.
-const accounts = new Map(FAKE_ACCOUNTS.map((a) => [a.email, a.password]));
+const accounts = new Map(
+  FAKE_ACCOUNTS.map(({ email, ...account }) => [email, account]),
+);
 
 // Pretend network delay, so the loading state on the buttons is visible.
 const FAKE_LATENCY_MS = 500;
@@ -26,7 +28,7 @@ const fakeSession = (email: string): Session => ({
 export async function signIn(input: SignInInput): Promise<Session> {
   await wait(FAKE_LATENCY_MS);
   const email = normalizeEmail(input.email);
-  if (accounts.get(email) !== input.password) {
+  if (accounts.get(email)?.password !== input.password) {
     throw new AuthError('Incorrect email or password.');
   }
   return fakeSession(email);
@@ -46,8 +48,18 @@ export async function signUp(input: SignUpInput): Promise<Session> {
   if (accounts.has(email)) {
     throw new AuthError('An account with this email already exists.');
   }
-  accounts.set(email, input.password);
+  accounts.set(email, {
+    password: input.password,
+    firstName: input.firstName.trim(),
+    lastName: input.lastName.trim(),
+  });
   return fakeSession(email);
+}
+
+/** STUB helper for api/profile.ts: the name an account was created with. */
+export function getFakeAccountName(email: string) {
+  const account = accounts.get(email);
+  return account && { firstName: account.firstName, lastName: account.lastName };
 }
 
 /** STUB. Real version: `supabase.auth.signOut()`. */
