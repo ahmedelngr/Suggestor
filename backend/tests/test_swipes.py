@@ -61,18 +61,18 @@ def first_two(conn, user_id):
 
 
 @needs_scratch_db
-def test_taste_is_weighted_average_and_latest_swipe_wins(conn):
+def test_taste_is_normalized_weighted_sum_and_latest_swipe_wins(conn):
     user_id = make_user(conn)
     taco = make_item(conn, "taco", vec(1.0, 0.0))
     sushi = make_item(conn, "sushi", vec(0.0, 1.0))
     add_swipe(conn, user_id, taco, True, "2 days")
     add_swipe(conn, user_id, sushi, False, "1 day")
     update_taste(conn, user_id)
-    assert first_two(conn, user_id) == pytest.approx([0.5, -0.25])
+    assert first_two(conn, user_id) == pytest.approx([0.894427, -0.447214], abs=1e-5)
 
     add_swipe(conn, user_id, taco, False, "0 days")
     update_taste(conn, user_id)
-    assert first_two(conn, user_id) == pytest.approx([-0.25, -0.25])
+    assert first_two(conn, user_id) == pytest.approx([-0.707107, -0.707107], abs=1e-5)
 
 
 @needs_scratch_db
@@ -95,35 +95,52 @@ def signed_in(monkeypatch, profile, item_found=True):
     monkeypatch.setattr(main, "item_exists", lambda conn, item_id: item_found)
 
 
+def track_calls(monkeypatch, swipes_done=0):
+    calls = []
+    monkeypatch.setattr(main, "record_swipe", lambda conn, uid, iid, liked: calls.append("record") or 42)
+    monkeypatch.setattr(main, "swipe_count", lambda conn, uid: swipes_done)
+    monkeypatch.setattr(main, "mark_onboarded", lambda conn, uid: calls.append("mark_onboarded"))
+    monkeypatch.setattr(main, "update_taste", lambda conn, uid: calls.append("taste"))
+    return calls
+
+
 def test_swipe_without_profile_is_404(monkeypatch):
     signed_in(monkeypatch, None)
     assert client.post("/swipes", json={"item_id": 1, "liked": True}).status_code == 404
 
 
 def test_swipe_on_missing_item_is_404(monkeypatch):
-    signed_in(monkeypatch, {"id": 1, "has_taste": False}, item_found=False)
+    signed_in(monkeypatch, {"id": 1, "has_taste": False, "onboarded": False}, item_found=False)
     assert client.post("/swipes", json={"item_id": 99, "liked": True}).status_code == 404
 
 
-def test_swipe_records_and_updates_taste(monkeypatch):
-    signed_in(monkeypatch, {"id": 5, "has_taste": False})
-    calls = []
-
-    def fake_record(conn, user_id, item_id, liked):
-        calls.append(("record", user_id, item_id, liked))
-        return 42
-
-    def fake_update(conn, user_id):
-        calls.append(("taste", user_id))
-
-    monkeypatch.setattr(main, "record_swipe", fake_record)
-    monkeypatch.setattr(main, "update_taste", fake_update)
+def test_swipe_during_onboarding_does_not_build_taste(monkeypatch):
+    signed_in(monkeypatch, {"id": 5, "has_taste": False, "onboarded": False})
+    calls = track_calls(monkeypatch, swipes_done=3)
     response = client.post("/swipes", json={"item_id": 3, "liked": False})
     assert response.status_code == 201
-    assert response.json() == {"id": 42, "item_id": 3, "liked": False}
-    assert calls == [("record", 5, 3, False), ("taste", 5)]
+    assert response.json() == {"id": 42, "item_id": 3, "liked": False, "onboarded": False}
+    assert calls == ["record"]
+
+
+def test_fifth_swipe_finishes_onboarding_and_builds_taste(monkeypatch):
+    signed_in(monkeypatch, {"id": 5, "has_taste": False, "onboarded": False})
+    calls = track_calls(monkeypatch, swipes_done=5)
+    response = client.post("/swipes", json={"item_id": 3, "liked": True})
+    assert response.status_code == 201
+    assert response.json()["onboarded"] is True
+    assert calls == ["record", "mark_onboarded", "taste"]
+
+
+def test_swipe_after_onboarding_updates_taste(monkeypatch):
+    signed_in(monkeypatch, {"id": 5, "has_taste": True, "onboarded": True})
+    calls = track_calls(monkeypatch, swipes_done=9)
+    response = client.post("/swipes", json={"item_id": 3, "liked": True})
+    assert response.status_code == 201
+    assert response.json()["onboarded"] is True
+    assert calls == ["record", "taste"]
 
 
 def test_swipe_rejects_bad_body(monkeypatch):
-    signed_in(monkeypatch, {"id": 1, "has_taste": True})
+    signed_in(monkeypatch, {"id": 1, "has_taste": True, "onboarded": True})
     assert client.post("/swipes", json={"item_id": "x"}).status_code == 422

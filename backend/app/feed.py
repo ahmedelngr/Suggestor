@@ -26,7 +26,8 @@ LIMIT %(limit)s
 def get_profile(conn, auth_id):
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
-            "SELECT id, taste_vector IS NOT NULL AS has_taste FROM users WHERE auth_id = %s::uuid",
+                "SELECT id, taste_vector IS NOT NULL AS has_taste, onboarded_at IS NOT NULL AS onboarded "
+                "FROM users WHERE auth_id = %s::uuid",
             (auth_id,),
         )
         return cur.fetchone()
