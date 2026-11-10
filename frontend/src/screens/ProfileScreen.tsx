@@ -12,18 +12,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getLikes } from '../api/feedback';
+import { getFriends } from '../api/friends';
 import { getProfile } from '../api/profile';
 import { useSession } from '../auth/SessionProvider';
 import { Avatar } from '../components/Avatar';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { colors } from '../theme';
-import type { LikedItem, UserProfile } from '../types';
+import type { Friend, LikedItem, UserProfile } from '../types';
 
 type Status = 'loading' | 'error' | 'ready';
 
 interface ProfileData {
   profile: UserProfile;
   likes: LikedItem[];
+  friends: Friend[];
 }
 
 /** How many of the most common tags among the user's likes to show. */
@@ -37,9 +39,9 @@ export function ProfileScreen() {
   const load = useCallback(() => {
     // Null only for a moment while signing out, before the guard leaves this screen.
     if (!session) return;
-    Promise.all([getProfile(session), getLikes(session)])
-      .then(([profile, likes]) => {
-        setData({ profile, likes });
+    Promise.all([getProfile(session), getLikes(session), getFriends(session)])
+      .then(([profile, likes, friends]) => {
+        setData({ profile, likes, friends });
         setStatus('ready');
       })
       .catch((err) => {
@@ -74,7 +76,7 @@ export function ProfileScreen() {
       </View>
     );
   } else {
-    const { profile, likes } = data;
+    const { profile, likes, friends } = data;
     const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.email;
     const favoriteTags = mostCommonTags(likes, FAVORITE_TAG_COUNT);
 
@@ -97,6 +99,20 @@ export function ProfileScreen() {
             </View>
           </Section>
         )}
+
+        <Section title={`Friends (${friends.length})`}>
+          {friends.length === 0 ? (
+            <Text style={styles.emptyText}>No friends yet.</Text>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.friends}>
+                {friends.map((friend) => (
+                  <FriendTile key={friend.id} friend={friend} />
+                ))}
+              </View>
+            </ScrollView>
+          )}
+        </Section>
 
         <Section title={`Liked places (${likes.length})`}>
           {likes.length === 0 ? (
@@ -151,6 +167,22 @@ function Section(props: { title: string; note?: string; children: ReactNode }) {
         {props.note ? <Text style={styles.sectionNote}>{props.note}</Text> : null}
       </View>
       <View style={styles.sectionCard}>{props.children}</View>
+    </View>
+  );
+}
+
+function FriendTile({ friend }: { friend: Friend }) {
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${friend.displayName}, ${friend.placesInCommon} places in common`}
+      style={styles.friend}
+    >
+      <Avatar name={friend.displayName} size={56} />
+      <Text style={styles.friendName} numberOfLines={1}>
+        {friend.displayName}
+      </Text>
+      <Text style={styles.friendMeta}>{friend.placesInCommon} in common</Text>
     </View>
   );
 }
@@ -280,6 +312,25 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 13,
     color: colors.text,
+  },
+  friends: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  friend: {
+    width: 80,
+    alignItems: 'center',
+    gap: 4,
+  },
+  friendName: {
+    marginTop: 2,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  friendMeta: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
   emptyText: {
     padding: 8,

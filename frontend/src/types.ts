@@ -44,6 +44,18 @@ export interface UserProfile {
   email: string;
 }
 
+/**
+ * Someone the user is friends with. MOCKUP: social features are out of MVP1
+ * scope (docs/vision-and-scope.md), so nothing on the backend matches this.
+ */
+export interface Friend {
+  id: number;
+  /** First name and last initial only. Never show other users' contact details. */
+  displayName: string;
+  /** How many places you have both liked. */
+  placesInCommon: number;
+}
+
 export interface SignInInput {
   email: string;
   password: string;
