@@ -1,4 +1,5 @@
 import json
+import math
 import os
 
 
@@ -36,9 +37,10 @@ def update_taste(conn, user_id):
             total = [0.0] * len(vector)
         for k, x in enumerate(vector):
             total[k] += weight * x
-    taste = [x / len(rows) for x in total]
-    if not any(taste):
+    norm = math.sqrt(sum(x * x for x in total))
+    if norm == 0:
         return
+    taste = [x / norm for x in total]
     conn.execute(
         "UPDATE users SET taste_vector = %s::vector WHERE id = %s",
         (json.dumps(taste), user_id),

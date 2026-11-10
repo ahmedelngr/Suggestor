@@ -8,6 +8,12 @@ from pydantic import BaseModel
 from backend.app.auth import current_user, supabase_headers
 from backend.app.db import get_conn
 from backend.app.feed import get_feed, get_profile
+from backend.app.onboarding import (
+    ONBOARDING_SWIPES,
+    get_onboarding_items,
+    mark_onboarded,
+    swipe_count,
+)
 from backend.app.swipes import item_exists, record_swipe, update_taste
 
 app = FastAPI(title="Suggestor")
@@ -75,5 +81,18 @@ def swipe(
     if not item_exists(conn, body.item_id):
         raise HTTPException(status_code=404, detail="Item not found")
     swipe_id = record_swipe(conn, profile["id"], body.item_id, body.liked)
-    update_taste(conn, profile["id"])
-    return {"id": swipe_id, "item_id": body.item_id, "liked": body.liked}
+    onboarded = profile["onboarded"]
+    if not onboarded and swipe_count(conn, profile["id"]) >= ONBOARDING_SWIPES:
+        mark_onboarded(conn, profile["id"])
+        onboarded = True
+    if onboarded:
+        update_taste(conn, profile["id"])
+    return {"id": swipe_id, "item_id": body.item_id, "liked": body.liked, "onboarded": onboarded}
+
+
+@app.get("/onboarding")
+def onboarding(
+    user: dict[str, str] = Depends(current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[dict]:
+    return get_onboarding_items(conn)
