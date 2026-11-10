@@ -2,6 +2,8 @@ import json
 import math
 import os
 
+from psycopg.rows import dict_row
+
 
 def item_exists(conn, item_id):
     return conn.execute("SELECT 1 FROM items WHERE id = %s", (item_id,)).fetchone() is not None
@@ -45,3 +47,20 @@ def update_taste(conn, user_id):
         "UPDATE users SET taste_vector = %s::vector WHERE id = %s",
         (json.dumps(taste), user_id),
     )
+
+
+def get_likes(conn, user_id, limit):
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT i.id, i.title, i.description, i.latitude, i.longitude,
+                   i.price_tier, i.tags, i.image_url, ls.created_at AS liked_at
+            FROM latest_swipes ls
+            JOIN items i ON i.id = ls.item_id
+            WHERE ls.user_id = %s AND ls.liked
+            ORDER BY ls.created_at DESC
+            LIMIT %s
+            """,
+            (user_id, limit),
+        )
+        return cur.fetchall()
