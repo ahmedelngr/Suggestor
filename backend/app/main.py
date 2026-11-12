@@ -14,7 +14,7 @@ from backend.app.onboarding import (
     mark_onboarded,
     swipe_count,
 )
-from backend.app.swipes import item_exists, record_swipe, update_taste
+from backend.app.swipes import item_exists, record_swipe, update_taste, get_likes
 
 app = FastAPI(title="Suggestor")
 
@@ -96,3 +96,15 @@ def onboarding(
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[dict]:
     return get_onboarding_items(conn)
+
+
+@app.get("/likes")
+def likes(
+    limit: int = Query(100, ge=1, le=200),
+    user: dict[str, str] = Depends(current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[dict]:
+    profile = get_profile(conn, user["auth_id"])
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return get_likes(conn, profile["id"], limit)
