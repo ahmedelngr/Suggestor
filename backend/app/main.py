@@ -3,6 +3,7 @@ import os
 import httpx
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.app.auth import current_user, supabase_headers
@@ -17,6 +18,15 @@ from backend.app.onboarding import (
 from backend.app.swipes import item_exists, record_swipe, update_taste, get_likes
 
 app = FastAPI(title="Suggestor")
+
+# Browsers may call the API from these origins (comma-separated in CORS_ORIGINS).
+origins = os.environ.get("CORS_ORIGINS", "http://localhost:8081,http://localhost:19006")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in origins.split(",") if o.strip()],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 
 class SwipeIn(BaseModel):
