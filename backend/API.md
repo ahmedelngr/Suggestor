@@ -32,7 +32,7 @@ No auth. `200` `{"status": "ok"}` if the database answers, otherwise `500`.
 ### `GET /me` (auth)
 The signed-in user's profile.
 
-- `200` `{"id", "first_name", "last_name", "email", "onboarded_at"}`. `onboarded_at` is `null` until onboarding is done.
+- `200` `{"id", "first_name", "last_name", "email", "onboarded_at", "onboarded"}`. `onboarded` is `true` once onboarding is done, and `onboarded_at` is `null` until then.
 - `401` bad or expired token
 - `404` no profile row for this user
 - `502` the profile service failed

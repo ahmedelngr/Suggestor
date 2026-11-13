@@ -52,7 +52,8 @@ def me(user: dict[str, str] = Depends(current_user)) -> dict:
     rows = resp.json()
     if not rows:
         raise HTTPException(status_code=404, detail="Profile not found")
-    return rows[0]
+    profile = rows[0]
+    return {**profile, "onboarded": profile.get("onboarded_at") is not None}
 
 
 @app.get("/feed")

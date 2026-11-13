@@ -70,3 +70,14 @@ def test_me_supabase_error_is_502(monkeypatch):
     fake_supabase(monkeypatch, 500, None)
     assert client.get("/me").status_code == 502
 
+
+def test_me_reports_onboarded(monkeypatch):
+    signed_in_as_test_user()
+    fake_supabase(monkeypatch, 200, [{"id": 1, "onboarded_at": "2026-11-10T00:00:00+00:00"}])
+    assert client.get("/me").json()["onboarded"] is True
+
+
+def test_me_reports_not_onboarded(monkeypatch):
+    signed_in_as_test_user()
+    fake_supabase(monkeypatch, 200, [{"id": 1, "onboarded_at": None}])
+    assert client.get("/me").json()["onboarded"] is False
