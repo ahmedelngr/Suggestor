@@ -18,6 +18,7 @@ from backend.app.onboarding import (
 from backend.app.swipes import item_exists, record_swipe, update_taste, get_likes
 
 app = FastAPI(title="Suggestor")
+
 # Browsers may call the API from these origins (comma-separated in CORS_ORIGINS).
 origins = os.environ.get("CORS_ORIGINS", "http://localhost:8081,http://localhost:19006")
 app.add_middleware(
