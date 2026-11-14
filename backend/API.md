@@ -43,17 +43,17 @@ The seed restaurants to swipe on during onboarding. Includes all of them, even o
 - `200` a list of `{"id", "title", "description", "latitude", "longitude", "price_tier", "tags", "image_url"}`. `price_tier` and `image_url` can be `null`.
 - `401` bad or expired token
 
-### `GET /feed?limit=20` (auth)
-Restaurants ranked by closeness to the user's taste, excluding ones they swiped on in the last `COOLDOWN_DAYS` (default 14). `limit` is 1 to 50.
+### `GET /feed?limit=20&lat=34.06&lon=-117.82` (auth)
+Restaurants ranked by closeness to the user's taste, excluding ones they swiped on in the last `COOLDOWN_DAYS` (default 14). `limit` is 1 to 50. `lat` and `lon` are optional (send both or neither): the user's location, used only to work out `miles`, and not stored. Without them, miles are measured from Cal Poly Pomona.
 
-- `200` a list, closest first. Each item: `{"id", "title", "description", "latitude", "longitude", "price_tier", "tags", "image_url", "distance"}`. `price_tier` and `image_url` can be `null`.
-- `distance` is the taste distance (smaller means a better match). It is **not miles** and should not be shown to users. Miles are not provided yet.
+- `200` a list, closest taste first. Each item: `{"id", "title", "description", "latitude", "longitude", "price_tier", "tags", "image_url", "distance", "miles"}`. `price_tier` and `image_url` can be `null`.
+- `miles` is the straight-line distance in miles from the given location, or `null` if the restaurant has no coordinates. Ranking does not use it.
+- `distance` is the taste distance (smaller means a better match). It is **not miles** and should not be shown to users.
 - An empty list means no restaurant is eligible right now.
 - `401` bad or expired token
 - `404` no profile row
 - `409` onboarding is not finished yet
-- `422` invalid `limit`
-
+- `422` invalid `limit`, only one of `lat` and `lon`, or a location out of range
 ### `POST /swipes` (auth)
 Record a like or a pass. Swiping the same restaurant again replaces the earlier vote.
 
@@ -72,5 +72,4 @@ The restaurants the user currently likes, meaning their latest swipe on each one
 - `422` invalid `limit`
 
 ## Not available yet
-- Distance in miles from the user's location.
 - `price_tier` and `image_url` are empty in the data for now.
