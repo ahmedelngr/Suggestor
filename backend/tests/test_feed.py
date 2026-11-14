@@ -1,3 +1,4 @@
+import math
 import os
 
 import psycopg
@@ -7,7 +8,7 @@ from fastapi.testclient import TestClient
 from backend.app import main
 from backend.app.auth import current_user
 from backend.app.db import get_conn
-from backend.app.feed import get_feed
+from backend.app.feed import DEFAULT_LAT, DEFAULT_LON, get_feed
 from backend.app.main import app
 
 client = TestClient(app)
@@ -19,6 +20,12 @@ needs_scratch_db = pytest.mark.skipif(
     not ("localhost" in TEST_DB or "127.0.0.1" in TEST_DB),
     reason="set TEST_DATABASE_URL to a local scratch Postgres to run this",
 )
+
+
+def reference_miles(lat1, lon1, lat2, lon2):
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    a = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lon2 - lon1) / 2) ** 2
+    return 3958.8 * 2 * math.asin(math.sqrt(a))
 
 
 def vec(a, b):
@@ -79,7 +86,7 @@ def test_feed_without_taste_is_409(monkeypatch):
 
 def test_feed_returns_rows(monkeypatch):
     feed_as_test_user(monkeypatch, {"id": 1, "has_taste": True})
-    monkeypatch.setattr(main, "get_feed", lambda conn, auth_id, limit: [{"id": 7, "title": "Taco Place"}])
+    monkeypatch.setattr(main, "get_feed", lambda conn, auth_id, limit, lat, lon: [{"id": 7, "title": "Taco Place"}])
     response = client.get("/feed")
     assert response.status_code == 200
     assert response.json()[0]["title"] == "Taco Place"
@@ -88,3 +95,62 @@ def test_feed_returns_rows(monkeypatch):
 def test_feed_rejects_bad_limit(monkeypatch):
     feed_as_test_user(monkeypatch, {"id": 1, "has_taste": True})
     assert client.get("/feed?limit=0").status_code == 422
+
+
+def capture_feed_args(monkeypatch):
+    seen = {}
+
+    def fake_get_feed(conn, auth_id, limit, lat, lon):
+        seen.update(lat=lat, lon=lon)
+        return []
+
+    monkeypatch.setattr(main, "get_feed", fake_get_feed)
+    return seen
+
+
+def test_feed_falls_back_to_cal_poly_pomona(monkeypatch):
+    feed_as_test_user(monkeypatch, {"id": 1, "has_taste": True})
+    seen = capture_feed_args(monkeypatch)
+    assert client.get("/feed").status_code == 200
+    assert seen == {"lat": DEFAULT_LAT, "lon": DEFAULT_LON}
+
+
+def test_feed_uses_the_given_location(monkeypatch):
+    feed_as_test_user(monkeypatch, {"id": 1, "has_taste": True})
+    seen = capture_feed_args(monkeypatch)
+    assert client.get("/feed?lat=34.1&lon=-117.9").status_code == 200
+    assert seen == {"lat": 34.1, "lon": -117.9}
+
+
+def test_feed_needs_both_lat_and_lon(monkeypatch):
+    feed_as_test_user(monkeypatch, {"id": 1, "has_taste": True})
+    assert client.get("/feed?lat=34.1").status_code == 422
+    assert client.get("/feed?lon=-117.9").status_code == 422
+
+
+def test_feed_rejects_out_of_range_location(monkeypatch):
+    feed_as_test_user(monkeypatch, {"id": 1, "has_taste": True})
+    assert client.get("/feed?lat=91&lon=0").status_code == 422
+    assert client.get("/feed?lat=0&lon=181").status_code == 422
+
+
+@needs_scratch_db
+def test_feed_miles_match_a_reference_haversine(conn):
+    user_id = conn.execute(
+        "INSERT INTO users (email, auth_id, taste_vector) VALUES ('pytest-miles@example.test', %s, %s::vector) RETURNING id",
+        ("00000000-0000-0000-0000-000000000009", vec(1.0, 0.0)),
+    ).fetchone()[0]
+    assert user_id
+    places = {"downtown": (34.0522, -118.2437), "ontario": (34.0633, -117.6509), "nowhere": (None, None)}
+    for name, (lat, lon) in places.items():
+        conn.execute(
+            "INSERT INTO items (type, source, source_id, title, latitude, longitude, embedding) "
+            "VALUES ('restaurant', 'pytest', %s, %s, %s, %s, %s::vector)",
+            (name, f"pytest-miles-{name}", lat, lon, vec(1.0, 0.0)),
+        )
+    rows = {r["title"]: r for r in get_feed(conn, "00000000-0000-0000-0000-000000000009", 50, 34.0575, -117.8210)}
+    assert rows["pytest-miles-nowhere"]["miles"] is None
+    for name in ("downtown", "ontario"):
+        lat, lon = places[name]
+        assert rows[f"pytest-miles-{name}"]["miles"] == pytest.approx(reference_miles(34.0575, -117.8210, lat, lon), abs=0.01)
+    assert 20 < rows["pytest-miles-downtown"]["miles"] < 30
