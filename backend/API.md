@@ -12,6 +12,10 @@ Authorization: Bearer <access_token>
 
 Tokens last about an hour. A missing, invalid or expired token returns `401`. Get a new token from Supabase, not from this API.
 
+## CORS
+
+The web build of the app may call the API from the origins in the `CORS_ORIGINS` environment variable (comma-separated). The default is `http://localhost:8081,http://localhost:19006`, used by local Expo web. Only `GET` and `POST` with the `Authorization` and `Content-Type` headers are allowed. Add the real web address to `CORS_ORIGINS` before deploying.
+
 ## Typical flow
 
 1. Sign up or log in through Supabase and keep the access token.
