@@ -14,3 +14,7 @@ Format: date, decision, who decided, why. Add new entries at the bottom. Undecid
 | 2026-10 | Onboarding by swiping a seed set | Team | Seeds the taste vector |
 | 2026-10 | Area: Pomona radius | Team | Bounded data pull |
 | 2026-10 | Zero budget, free tiers only | Team | Club project |
+| 2026-10-25 | Database and login move to Supabase (Postgres, pgvector, Auth); docker-compose removed | Lead | Supabase Auth owns passwords; one hosted database for everyone |
+| 2026-11-05 | Data source is Foursquare OS Places (open dataset), not Yelp | Lead | Yelp and the Foursquare API terms bar storing the data (see `data/README.md`) |
+| 2026-11-09 | Onboarding is 5 swipes on seed restaurants; the taste vector is built when it finishes | Lead | Nothing to rank before that, so `/feed` returns 409 until then |
+| 2026-11-16 | Cooldown stays at 14 days | Lead | Product call |

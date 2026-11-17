@@ -7,7 +7,7 @@
 
 ## Day to day
 1. Pull the latest `main`.
-2. Create a branch: `role/short-description`, e.g. `data/yelp-ingest`, `backend/swipe-endpoint`.
+2. Create a branch: `role/short-description`, e.g. `data/load-places`, `backend/swipe-endpoint`.
 3. Make small commits. A PR should be reviewable in about 15 minutes.
 4. Open a PR using the template. Say what changed, why, and how to test it. For non-trivial code, include a short explanation of the concept.
 5. Request review from the folder owner. Reviewers aim to respond within 48 hours.
@@ -16,11 +16,8 @@
 ## Commit messages
 Short, present tense, say what: `Add swipe endpoint with latest-wins update`.
 
-## Run the database locally
-```bash
-docker compose up -d db
-```
-Migrations in `backend/db/migrations/` apply on the first start. To reset: `docker compose down -v` and start again (this deletes local data).
+## Run the API
+Steps are in [backend/README.md](../backend/README.md). The database is Supabase, so there is nothing to start locally. Schema changes are new numbered files in `backend/db/migrations/`, run in the Supabase SQL editor. Tests that run real SQL use a throwaway local Postgres, described in `backend/README.md`.
 
 ## Definition of done (every PR)
 - It does what the PR says, and you ran it.

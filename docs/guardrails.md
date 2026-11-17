@@ -4,10 +4,10 @@
 - Never commit API keys, passwords, tokens or `.env` files. Use `.env` locally and keep a `.env.example` with fake values in git.
 - If you commit a secret by accident, tell the lead immediately; the key must be rotated (deleting the commit is not enough).
 - Phone numbers and emails live only in the `users` table. They must not go into datasets, notebooks, logs, screenshots or chat.
-- Passwords are stored only as hashes.
+- Passwords are handled by Supabase Auth. Our database never stores them.
 
 ## Data and legal
-- Follow the data provider's terms. Until the Yelp viability memo is approved, do not bulk-store Yelp data.
+- Follow the dataset's license (Foursquare OS Places is Apache-2.0). Do not bulk-store data from any API whose terms bar storing it.
 - No scraping. Respect rate limits.
 - Show required attribution wherever provider data is displayed.
 

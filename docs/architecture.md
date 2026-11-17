@@ -14,15 +14,15 @@ Each idea has an analogy first, then the technical version.
 A vector is a list of numbers that places something on a "map of meaning". Similar things sit close together.
 
 1. **Item vectors** come from a fine-tuned sentence-transformer, computed offline in batches (when items are added or the model is retrained).
-2. **User taste vectors** are NOT model output. They are a running weighted average of the vectors of items the user liked or disliked.
+2. **User taste vectors** are NOT model output. They are built from the vectors of the restaurants the user liked or passed on (their latest swipe on each one).
 
 **Analogy:** each restaurant is a pin on a map. Your taste is a point on that map that drifts toward places you like and away from places you pass on.
-**Technical:** on a like, move the taste vector toward the item vector; on a pass, move away. Plain arithmetic, no model call. Exact weighting is an open decision.
+**Technical:** a like adds the item vector, a pass subtracts a smaller share (weights 1.0 and 0.5, set by `LIKE_WEIGHT` and `DISLIKE_WEIGHT`), and the sum is scaled to length 1. Plain arithmetic, no model call. The taste vector is first built when onboarding finishes (5 swipes); until then the feed returns 409. The exact weights are still an open decision.
 
 ## The feed
 1. Exclude items this user swiped within the cooldown window (by exact `item_id`).
 2. Run a pgvector cosine-similarity query of the taste vector against the remaining item vectors.
-3. Return the top K cards. No model runs at swipe or feed time.
+3. Return the top K cards, each with `miles` from the user's location (Cal Poly Pomona if the app sends none). No model runs at swipe or feed time.
 
 **Analogy:** hide the dishes you recently turned down, then show the closest matches to your taste.
 

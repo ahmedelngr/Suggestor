@@ -10,7 +10,7 @@ Suggestor is a standalone product. EventApp is a future integration client only.
 
 | Folder | Owner role | Purpose |
 |---|---|---|
-| `data/` | Data | Ingestion, cleaning, restaurant dedup |
+| `data/` | Data | Foursquare OS Places loader, cleaning |
 | `ml/` | Modeling + Testing | Embedding fine-tuning, eval scoreboard |
 | `backend/` | Backend | FastAPI service, Postgres + pgvector schema |
 | `frontend/` | Frontend | Swipe UI |
@@ -19,6 +19,12 @@ Suggestor is a standalone product. EventApp is a future integration client only.
 ## Database
 
 Supabase (Postgres + pgvector + Auth). Run `backend/db/migrations/*.sql` in order in the Supabase SQL editor. Copy `.env.example` to `.env` and fill in your own values. Never commit `.env`.
+
+## Run it
+
+- API: [backend/README.md](backend/README.md) (run locally or on a free host) and [backend/API.md](backend/API.md) (every endpoint).
+- App: [frontend/README.md](frontend/README.md).
+- Data: [data/README.md](data/README.md).
 
 ## Documentation
 
@@ -30,4 +36,4 @@ PRs only into protected `main`, 1 approval, squash merge. See `.github/CODEOWNER
 
 ## Design in one paragraph
 
-One generic `items` table (restaurants now, events/hotels later), a `users` table with a taste vector, and an append-only `swipes` log that is the source of truth. Item vectors come from a fine-tuned sentence-transformer, computed offline. User taste vectors are a running weighted average of liked/disliked item vectors, updated with plain arithmetic. The feed is a pgvector cosine query that excludes items swiped within the cooldown window. No model inference at swipe or feed time. See `docs/open-decisions.md`.
+One generic `items` table (restaurants now, events/hotels later), a `users` table with a taste vector, and an append-only `swipes` log that is the source of truth. Item vectors come from a fine-tuned sentence-transformer, computed offline. User taste vectors are built from each user's latest swipe on every restaurant (likes add, passes subtract a smaller share), once they finish onboarding with 5 swipes, and updated with plain arithmetic after every swipe. The feed is a pgvector cosine query that excludes items swiped within the cooldown window. No model inference at swipe or feed time. See `docs/open-decisions.md`.
