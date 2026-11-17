@@ -18,8 +18,8 @@ Fill in your GitHub handle. One role can be shared, but every folder has one acc
 |---|---|---|---|
 | Team lead | Ahmed | @ahmedelngr | decisions, reviews, integration |
 | [Data](roles/data.md) | Ahmed | @ahmedelngr | `data/` |
-| [Modeling + Testing](roles/modeling-testing.md) | Ahmed, Jayson | @ahmedelngr, @hsle-cpp | `ml/` |
-| [Backend](roles/backend.md) | kb, stjp | TBD (kb), @stjp777 | `backend/` |
+| [Modeling + Testing](roles/modeling-testing.md) | Ahmed | @ahmedelngr | `ml/` |
+| [Backend](roles/backend.md) | stjp | @stjp777 | `backend/` |
 | [Frontend](roles/frontend.md) | Nick | @nickPisano | `frontend/` |
 
 Not sure who to ask? Ask in the team chat first, then tag the lead.
