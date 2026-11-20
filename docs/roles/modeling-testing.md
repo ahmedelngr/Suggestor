@@ -1,7 +1,7 @@
 # Role: Modeling + Testing
 
 ## Mission
-Produce item embeddings that make recommendations better than "most popular", and build the scoreboard that proves it. This is the hardest role; two people share it, and the eval is as important as the model.
+Produce item embeddings that make recommendations better than "most popular", and build the scoreboard that proves it. This is the hardest role, and the eval is as important as the model.
 
 ## Owns
 `ml/`

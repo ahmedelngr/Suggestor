@@ -1,7 +1,7 @@
 # Role: Team lead (Ahmed)
 
 ## Mission
-Keep five people unblocked and pointed at the same goal.
+Keep the team unblocked and pointed at the same goal.
 
 ## Owns
 Decisions, reviews, integration, and the club's technical document.
