@@ -4,7 +4,7 @@
 
 | Week | Data | Modeling + Testing | Backend | Frontend |
 |---|---|---|---|---|
-| 1 | Yelp viability memo | Eval harness design | Local setup, migrations | Expo skeleton on phone |
+| 1 | Data source decision (done: Foursquare OS Places) | Eval harness design | Local setup, migrations | Expo skeleton on phone |
 | 2 | Ingestion script | Eval harness + baselines | Auth | Sign-up/login screens (mock API) |
 | 3 | Cleaning, seed set | Training-pair rules | Swipes + taste vector | Onboarding screening |
 | 4 | Data card, gaps fixed | Fine-tune v1 | Feed + search | Swipe card stack |

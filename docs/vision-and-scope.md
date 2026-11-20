@@ -11,12 +11,12 @@ Long-term vision: a personal taste-aware agent that recommends restaurants, even
 **Success metric:** Recall@K on held-out swipes, compared with the most-popular baseline. If we cannot show this, we have not finished.
 
 ### In scope
-- Yelp as the data source (pending the viability check in [open-decisions.md](open-decisions.md)).
+- Foursquare OS Places (an open dataset) as the data source, loaded by `data/load_places.py`.
 - Pomona area only (about a 15-mile radius around Cal Poly Pomona).
 - Accounts: first name, last name, phone, email, password.
 - Sign-up screening: swipe a small seed set of restaurants to create a starting taste vector.
 - Swipe card stack (right = like, left = pass) and a search bar.
-- Taste vector updates on every swipe.
+- Taste vector built when onboarding finishes (5 swipes), then updated on every swipe.
 - Feed ranked by similarity to the taste vector, with a cooldown on swiped items.
 - Fine-tuned small sentence-transformer for item embeddings.
 - Eval scoreboard (Recall@K vs popularity baseline).

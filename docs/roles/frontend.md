@@ -9,14 +9,14 @@ Build the mobile app where people sign up, finish the screening, and swipe.
 ## Deliverables (proposed)
 1. **Week 1:** Expo app runs on a real phone via Expo Go; screen navigation skeleton.
 2. **Week 2-3:** sign-up and login screens, built against the API contract (mock data until Backend is ready).
-3. **Week 3-4:** onboarding screening (10-15 seed restaurants, swipe through them).
-4. **Week 4-5:** swipe card stack (photo, name, cuisine, price tier, distance) with right = like, left = pass.
+3. **Week 3-4:** onboarding screening (5 seed restaurants, swipe through them).
+4. **Week 4-5:** swipe card stack (name, cuisine, distance, and a placeholder photo and price tier, since the open dataset has neither) with right = like, left = pass.
 5. **Week 5-6:** search bar, empty and error states, location permission.
 
 ## Definition of done
 - Works on iOS and Android through Expo Go.
 - Loading, empty and error states exist for every screen.
-- Required Yelp attribution is shown on cards if the terms require it.
+- Attribution is shown on cards if the data license requires it (Foursquare OS Places is Apache-2.0).
 
 ## Inputs and outputs
 - **Needs from Backend:** documented API. **Needs from Data:** image URLs, seed set.
